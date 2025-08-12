@@ -1,7 +1,7 @@
 // Service Worker
 const CACHE_NAME = 'telegenix-progress-app-v1';
 const ASSETS_TO_CACHE = [
-  './SearchTask.html',
+  './index.html',
   './manifest.json',
   './DESIGN.png',
   './DONE.png',
