@@ -577,6 +577,8 @@
                 const data = await response.json();
                 cachedTasks = data.result; // Cache the results
                 displayResult(data.result);
+                // Hide any offline notice if present since we fetched successfully
+                hideOfflineNotification();
                 
                 // Store in localStorage for offline access
                 localStorage.setItem('cachedTasks', JSON.stringify({
@@ -586,6 +588,12 @@
 
             } catch (err) {
                 console.log('Error fetching data:', err);
+                // One-time fast retry on initial failure to avoid false offline popup during startup
+                if (!window._initialFetchRetried) {
+                    window._initialFetchRetried = true;
+                    setTimeout(() => { try { performSearch(); } catch(_) {} }, 500);
+                    return;
+                }
                 
                 // Try to load cached data if offline
                 const cachedData = localStorage.getItem('cachedTasks');
@@ -608,21 +616,38 @@
 
         function showOfflineNotification(cacheAge) {
             const minutes = Math.floor(cacheAge / 60000);
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #f39c12;
-                color: white;
-                padding: 12px 20px;
-                border-radius: 4px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                z-index: 1000;
-            `;
-            notification.textContent = `You're offline. Showing cached data from ${minutes} minutes ago.`;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 5000);
+            let notification = document.getElementById('offline-notification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'offline-notification';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #f39c12;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 4px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    display: none;
+                `;
+                document.body.appendChild(notification);
+            }
+            notification.textContent = minutes > 0
+                ? `You're offline. Showing cached data from ${minutes} minutes ago.`
+                : `You're offline. Showing cached data.`;
+            notification.style.display = 'block';
+            if (notification._hideTimer) clearTimeout(notification._hideTimer);
+            notification._hideTimer = setTimeout(() => { notification.style.display = 'none'; }, 5000);
+        }
+
+        function hideOfflineNotification() {
+            const notification = document.getElementById('offline-notification');
+            if (notification) {
+                if (notification._hideTimer) clearTimeout(notification._hideTimer);
+                notification.style.display = 'none';
+            }
         }
 
         // Add event listener for the search button
