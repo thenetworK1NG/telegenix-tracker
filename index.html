@@ -374,9 +374,22 @@
         function toggleDescription(element) {
             const descContent = element.previousElementSibling;
             const isExpanded = descContent.classList.contains('expanded');
-            
+            // Get taskId from argument (for unique state per task)
+            const taskId = element.getAttribute('onclick').match(/'([^']+)'/)[1];
+            // Update class
             descContent.classList.toggle('expanded');
             element.textContent = isExpanded ? 'Show more' : 'Show less';
+            // Persist expanded/collapsed state in localStorage
+            let expandedDescriptions = {};
+            try {
+                expandedDescriptions = JSON.parse(localStorage.getItem('expandedDescriptions') || '{}');
+            } catch (e) {}
+            if (!isExpanded) {
+                expandedDescriptions[taskId] = true;
+            } else {
+                delete expandedDescriptions[taskId];
+            }
+            localStorage.setItem('expandedDescriptions', JSON.stringify(expandedDescriptions));
         }
 
         // Function to perform the search
@@ -513,6 +526,12 @@
                 const isCollapsed = window._collapsedComments && window._collapsedComments[task.id];
                 // Show red dot if latest comment is newer than last viewed
                 let showRedDot = latestCommentTime > lastViewedTime;
+                // Get expanded state from localStorage
+                let expandedDescriptions = {};
+                try {
+                    expandedDescriptions = JSON.parse(localStorage.getItem('expandedDescriptions') || '{}');
+                } catch (e) {}
+                const isExpanded = !!expandedDescriptions[task.id];
                 if (focusedTaskId == task.id.toString()) {
                     commentsCellHtml = document.querySelector(`[data-taskid='${task.id}']`)?.outerHTML || `<td class=\"comments-cell\" data-taskid=\"${task.id}\"></td>`;
                 } else {
@@ -531,17 +550,17 @@
                     <td style="font-weight: 500;">${task.title}</td>
                     ${commentsCellHtml}
                     <td class="description-cell">
-                        <span class="description-content ${needsExpansion ? 'collapsed' : ''}">
+                        <span class="description-content${needsExpansion ? (isExpanded ? ' expanded' : ' collapsed') : ''}">
                             ${needsExpansion ? `<span class="description-preview">${description.substring(0, 100)}...</span><span class="description-full">${description}</span>` : description}
                         </span>
-                        ${needsExpansion ? `<span class="show-more" onclick="toggleDescription(this)">Show more</span>` : ''}
+                        ${needsExpansion ? `<span class="show-more" onclick="toggleDescription(this, '${task.id}')">${isExpanded ? 'Show less' : 'Show more'}</span>` : ''}
                     </td>
                     <td class="status-cell" style="width: 200px;">
                         ${columnId === '22'
                             ? '<span style="color:#e74c3c;font-weight:bold;">Collected</span>'
                             : (() => {
                                 const currentStep = steps.find(step => step.id === columnId) || { label: columnId, img: '' };
-                                return `${currentStep.img ? `<img src="${currentStep.img}" class="status-icon" alt="${currentStep.label}">` : ''}<span class="status-label">${currentStep.label}</span>${generateProgressBar(columnId)}`;
+                                return `${currentStep.img ? `<img src=\"${currentStep.img}\" class=\"status-icon\" alt=\"${currentStep.label}\">` : ''}<span class=\"status-label\">${currentStep.label}</span>${generateProgressBar(columnId)}`;
                             })()
                         }
                     </td>
