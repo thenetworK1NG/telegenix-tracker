@@ -503,19 +503,22 @@
                 if (typeof window._collapsedComments[task.id] === 'undefined') {
                     window._collapsedComments[task.id] = true;
                 }
-                // Check unseen comments state from localStorage
-                let unseenComments = false;
+                // Check for new comments since last viewed
+                let lastViewedTime = 0;
                 try {
-                    const unseen = JSON.parse(localStorage.getItem('unseenComments') || '{}');
-                    unseenComments = unseen[task.id];
+                    const lastViewed = JSON.parse(localStorage.getItem('lastViewedComments') || '{}');
+                    lastViewedTime = lastViewed[task.id] || 0;
                 } catch (e) {}
+                let latestCommentTime = window._latestCommentTimestamps && window._latestCommentTimestamps[task.id] ? window._latestCommentTimestamps[task.id] : 0;
                 const isCollapsed = window._collapsedComments && window._collapsedComments[task.id];
+                // Show red dot if latest comment is newer than last viewed
+                let showRedDot = latestCommentTime > lastViewedTime;
                 if (focusedTaskId == task.id.toString()) {
                     commentsCellHtml = document.querySelector(`[data-taskid='${task.id}']`)?.outerHTML || `<td class=\"comments-cell\" data-taskid=\"${task.id}\"></td>`;
                 } else {
                     commentsCellHtml = `<td class=\"comments-cell\" data-taskid=\"${task.id}\">`
                         + `<button onclick=\"toggleComments('${task.id}')\" style=\"margin-bottom:6px;padding:3px 10px;border-radius:4px;border:1px solid #3498db;background:#3498db;color:white;cursor:pointer;font-size:0.95em;position:relative;\">${isCollapsed ? 'View Comments' : 'Hide Comments'}`
-                        + (unseenComments ? '<span style=\"position:absolute;top:4px;right:4px;width:10px;height:10px;background:#e74c3c;border-radius:50%;display:inline-block;\"></span>' : '')
+                        + (showRedDot ? '<span style=\"position:absolute;top:4px;right:4px;width:10px;height:10px;background:#e74c3c;border-radius:50%;display:inline-block;\"></span>' : '')
                         + `</button>`
                         + `<div id=\"comments-${task.id}\" style=\"display:${isCollapsed ? 'none' : 'block'};margin-top:4px;\"></div>`
                         + `<form id=\"comment-form-${task.id}\" onsubmit=\"return submitComment(event, '${task.id}')\" style=\"display:${isCollapsed ? 'none' : 'flex'};gap:8px;align-items:center;margin-top:4px;\">`
@@ -605,7 +608,9 @@
                 let html = '';
                 // Comments list
                 html += '<div class="comments-list" style="margin-bottom:12px;">';
+                let latestTimestamp = 0;
                 for (const [commentId, comment] of Object.entries(commentsObj || {})) {
+                    if (comment.timestamp && comment.timestamp > latestTimestamp) latestTimestamp = comment.timestamp;
                     html += `<div class="comment-item" id="comment-${taskId}-${commentId}" style="background:#f8f9fa;padding:10px 12px;margin-bottom:8px;border-radius:6px;display:flex;align-items:center;gap:10px;">
                         <span class="comment-text" style="flex:1;">${comment.text}</span>
                         <span class="comment-time" style="font-size:0.8em;color:#888;min-width:120px;text-align:right;">${new Date(comment.timestamp).toLocaleString()}</span>
@@ -615,6 +620,9 @@
                 }
                 html += '</div>';
                 commentsDiv.innerHTML = html;
+                // Store latest comment timestamp for this task for red dot logic
+                if (!window._latestCommentTimestamps) window._latestCommentTimestamps = {};
+                window._latestCommentTimestamps[taskId] = latestTimestamp;
             });
         }
 
@@ -700,15 +708,19 @@
             window._collapsedComments[taskId] = !window._collapsedComments[taskId];
             // If opening comments, mark as seen
             if (!window._collapsedComments[taskId]) {
-                try {
-                    const unseen = JSON.parse(localStorage.getItem('unseenComments') || '{}');
-                    if (unseen[taskId]) {
-                        unseen[taskId] = false;
-                        localStorage.setItem('unseenComments', JSON.stringify(unseen));
-                    }
-                } catch (e) {}
-            }
-            performSearch();
+                    try {
+                        const lastViewed = JSON.parse(localStorage.getItem('lastViewedComments') || '{}');
+                        // Wait a moment for comments to load, then update last viewed timestamp
+                        setTimeout(() => {
+                            const latest = (window._latestCommentTimestamps && window._latestCommentTimestamps[taskId]) || Date.now();
+                            lastViewed[taskId] = latest;
+                            localStorage.setItem('lastViewedComments', JSON.stringify(lastViewed));
+                            performSearch();
+                        }, 400);
+                    } catch (e) { performSearch(); }
+                } else {
+                    performSearch();
+                }
         }
     </script>
 </body>
