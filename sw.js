@@ -1,5 +1,5 @@
 // Service Worker
-const CACHE_NAME = 'telegenix-progress-app-v1';
+const CACHE_NAME = 'telegenix-progress-app-v2';
 const ASSETS_TO_CACHE = [
   './index.html',
   './manifest.json',
@@ -46,6 +46,21 @@ self.addEventListener('fetch', (event) => {
   ) {
     // Just fetch, don't try to cache
     event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Network-first for navigations (HTML) to ensure latest UI is loaded
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Update cache with the fresh HTML
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
     return;
   }
 

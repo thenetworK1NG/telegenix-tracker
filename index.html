@@ -27,7 +27,7 @@
             color: #333;
         }
         .container {
-            max-width: 1200px;
+            max-width: 100%;
             margin: 0 auto;
             background: white;
             padding: 30px;
@@ -91,6 +91,8 @@
             border-collapse: collapse; 
             margin-top: 20px;
             background: white;
+            table-layout: fixed;
+            overflow: hidden;
         }
         th { 
             background: #f8f9fa;
@@ -99,21 +101,65 @@
             font-weight: 500;
             color: #2c3e50;
             border-bottom: 2px solid #ddd;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         td { 
             padding: 12px;
             border-bottom: 1px solid #ddd;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: top;
         }
         tr:hover {
             background: #f8f9fa;
         }
+        /* Two blocks layout */
+        .lists-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Always single column for full-width sections */
+            gap: 20px;
+        }
+        @media (min-width: 1600px) {
+            .container { max-width: 100%; }
+            .lists-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .list-block {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .list-block h2 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .list-block .count {
+            font-size: 12px;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+        .list-block.collected h2 { color: #8e44ad; }
+        .list-block.active h2 { color: #2c3e50; }
         .description-cell {
             position: relative;
-            max-width: 400px;
-        }        .description-content {
+            max-width: 100%;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        .description-content {
             color: #666;
             font-size: 0.95em;
             display: inline;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
         .description-content.collapsed {
             display: inline;
@@ -139,6 +185,16 @@
         }
         .status-cell {
             position: relative;
+        }
+        /* Ensure Comments column is wide enough and the textarea fills it */
+        .comments-cell {
+            min-width: 600px;
+            max-width: 1fr;
+        }
+        .comments-cell textarea {
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
         }
         .progress-container {
             display: flex;
@@ -171,6 +227,56 @@
             display: inline-block;
             vertical-align: middle;
         }
+        /* Preview column removed */
+        /* Column sizing: Preview | Title | Comments | Description | Started | Status */
+    /* With Preview removed: Title | Comments | Description | Started | Status */
+    table tr th:nth-child(1),
+    table tr td:nth-child(1) { width: 15%; } /* Title */
+    table tr th:nth-child(2),
+    table tr td:nth-child(2) { width: 45%; } /* Comments */
+    table tr th:nth-child(3),
+    table tr td:nth-child(3) { width: 23%; } /* Description */
+    table tr th:nth-child(4),
+    table tr td:nth-child(4) { width: 8%; }  /* Started */
+    table tr th:nth-child(5),
+    table tr td:nth-child(5) { width: 9%; }  /* Status */
+        /* Ensure no horizontal scroll from long content */
+        html, body { max-width: 100%; overflow-x: hidden; }
+        .list-block { overflow: hidden; }
+        .comment-form { min-width: 0; }
+        .comment-form input,
+        .comment-form textarea { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+
+        /* Mobile responsive tweaks */
+        @media (max-width: 900px) {
+            .container { padding: 16px; }
+            h1 { font-size: 20px; }
+            button { padding: 9px 16px; font-size: 13px; }
+            th, td { padding: 10px; }
+            /* Rebalance widths for 5 columns on small screens */
+            table tr th:nth-child(1),
+            table tr td:nth-child(1) { width: 22%; } /* Title */
+            table tr th:nth-child(2),
+            table tr td:nth-child(2) { width: 42%; } /* Comments */
+            table tr th:nth-child(3),
+            table tr td:nth-child(3) { width: 24%; } /* Description */
+            table tr th:nth-child(4),
+            table tr td:nth-child(4) { width: 6%; }  /* Started */
+            table tr th:nth-child(5),
+            table tr td:nth-child(5) { width: 6%; }  /* Status */
+        }
+        /* Let status content show fully */
+        .status-cell { overflow: visible; }
+    .status-cell .status-label { white-space: nowrap; }
+        @media (max-width: 640px) {
+            .search-form { gap: 8px; }
+            .search-form .form-group label { font-size: 12px; }
+            input, select { padding: 8px; font-size: 13px; }
+            th, td { padding: 8px; font-size: 13px; }
+            .comments-cell { min-width: 220px; }
+            .status-label { font-size: 0.85em; }
+            .status-cell { width: auto !important; }
+        }
         .comment-item {
             background: #f8f9fa;
             padding: 10px 12px;
@@ -179,9 +285,13 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            min-width: 0;
         }
         .comment-text {
-            flex: 1;
+            flex: 1 1 auto;
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
         .comment-time {
             font-size: 0.8em;
@@ -212,13 +322,19 @@
             background: #f4f8fb;
             padding: 10px 12px;
             border-radius: 6px;
+            min-width: 0;
         }
-        .comment-form input {
-            flex: 1;
+        .comment-form input,
+        .comment-form textarea {
+            flex: 1 1 auto;
             padding: 8px 12px;
             border: 1px solid #cce0f7;
             border-radius: 4px;
             font-size: 1em;
+            min-width: 0;
+            max-width: 100%;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
         .comment-form button {
             background: #3498db;
@@ -351,6 +467,37 @@
             { id: '7', label: 'FACTORY', img: 'manufacturing-process.png' },
             { id: '4', label: 'DONE', img: 'DONE.png' }
         ];
+
+        // Extract an image URL from description (supports HTML <img>, Markdown, URLs, bare filenames) and normalize protocol
+        function extractImageUrl(text) {
+            if (!text) return '';
+            const srcFromHtml = /<img[^>]*src=["']([^"']+\.(?:png|jpe?g|gif|webp|bmp)[^"']*)["']/i;
+            const srcFromMd = /!\[[^\]]*\]\(([^\)]+\.(?:png|jpe?g|gif|webp|bmp)[^\)]*)\)/i;
+            const srcFromUrl = /(https?:[^\s\)\"'>]+\.(?:png|jpe?g|gif|webp|bmp))/i;
+            const srcFromFilename = /(^|\s)([^\s]+\.(?:png|jpe?g|gif|webp|bmp))(\s|$)/i;
+
+            let url = '';
+            let m = text.match(srcFromHtml) || text.match(srcFromMd) || text.match(srcFromUrl);
+            if (m) {
+                url = m[1];
+            } else {
+                const f = text.match(srcFromFilename);
+                if (f) {
+                    // If only a filename is present, optionally use a base URL from localStorage
+                    let base = '';
+                    try { base = JSON.parse(localStorage.getItem('imageBaseUrl') || '""'); } catch(_) { base = ''; }
+                    if (base) url = base.replace(/\/$/, '') + '/' + f[2];
+                }
+            }
+            if (!url) return '';
+            try {
+                if (url.startsWith('//')) url = 'https:' + url;
+                if (location && location.protocol === 'https:' && url.startsWith('http://')) {
+                    url = 'https://' + url.substring('http://'.length);
+                }
+            } catch(_) {}
+            return url;
+        }
 
         function getStepIndex(columnId) {
             return steps.findIndex(step => step.id === columnId.toString());
@@ -492,7 +639,38 @@
         function displayResult(tasks) {
             // Prevent re-rendering if editing a comment
             if (window._isEditingComment) return;
-            if (!tasks || tasks.length === 0) {
+
+            // Determine collected column ids (configurable per project via localStorage)
+            const projectIdEl = document.getElementById('projectId');
+            const currentProjectId = projectIdEl ? String(projectIdEl.value) : 'default';
+            let collectedConfig = {};
+            try { collectedConfig = JSON.parse(localStorage.getItem('collectedColumnIdsByProject') || '{}'); } catch (e) { collectedConfig = {}; }
+            const defaultCollected = ['22'];
+            const projectCollectedIds = Array.isArray(collectedConfig[currentProjectId]) && collectedConfig[currentProjectId].length > 0
+                ? collectedConfig[currentProjectId].map(id => String(id).trim())
+                : defaultCollected;
+
+            const getColId = (t) => {
+                const raw = (t && (t.column_id ?? t.columnId ?? ''));
+                return String(raw).trim();
+            };
+            const isCollectedId = (id) => projectCollectedIds.includes(String(id).trim());
+            const identifyCollected = (t) => {
+                try {
+                    const col = getColId(t);
+                    if (isCollectedId(col)) return true;
+                    const title = (t.title || '').toLowerCase();
+                    const desc = (t.description || '').toLowerCase();
+                    return /\bcollected\b/.test(title) || /\bcollected\b/.test(desc);
+                } catch (_) { return false; }
+            };
+
+            const collectedTasks = (tasks || []).filter(t => identifyCollected(t));
+            // Exclude any task present in collectedTasks by id to avoid duplication even if data is odd
+            const collectedIdSet = new Set(collectedTasks.map(t => String(t.id)));
+            const activeTasks = (tasks || []).filter(t => !identifyCollected(t) && !collectedIdSet.has(String(t.id)));
+
+            if ((!activeTasks || activeTasks.length === 0) && (!collectedTasks || collectedTasks.length === 0)) {
                 document.getElementById("result").innerHTML = `
                     <div style="text-align: center; color: #666; padding: 40px;">
                         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
@@ -503,79 +681,224 @@
                 return;
             }
 
-            let html = "<table><tr><th>Title</th><th>Comments</th><th>Description</th><th>Status</th></tr>";
             const focusedTaskId = localStorage.getItem('comment-focused');
-            // Ensure _collapsedComments is initialized and default to true (hidden)
             if (!window._collapsedComments) window._collapsedComments = {};
-            tasks.forEach(task => {
-                const description = task.description || "";
-                const needsExpansion = description.length > 100;
-                const columnId = task.column_id.toString();
-                let commentsCellHtml = '';
-                // Default to hidden if not set
-                if (typeof window._collapsedComments[task.id] === 'undefined') {
-                    window._collapsedComments[task.id] = true;
-                }
-                // Check for new comments since last viewed
-                let lastViewedTime = 0;
-                try {
-                    const lastViewed = JSON.parse(localStorage.getItem('lastViewedComments') || '{}');
-                    lastViewedTime = lastViewed[task.id] || 0;
-                } catch (e) {}
-                let latestCommentTime = window._latestCommentTimestamps && window._latestCommentTimestamps[task.id] ? window._latestCommentTimestamps[task.id] : 0;
-                const isCollapsed = window._collapsedComments && window._collapsedComments[task.id];
-                // Show red dot if latest comment is newer than last viewed
-                let showRedDot = latestCommentTime > lastViewedTime;
-                // Get expanded state from localStorage
-                let expandedDescriptions = {};
-                try {
-                    expandedDescriptions = JSON.parse(localStorage.getItem('expandedDescriptions') || '{}');
-                } catch (e) {}
-                const isExpanded = !!expandedDescriptions[task.id];
-                if (focusedTaskId == task.id.toString()) {
-                    commentsCellHtml = document.querySelector(`[data-taskid='${task.id}']`)?.outerHTML || `<td class=\"comments-cell\" data-taskid=\"${task.id}\"></td>`;
-                } else {
-                    commentsCellHtml = `<td class=\"comments-cell\" data-taskid=\"${task.id}\">`
-                        + `<button onclick=\"toggleComments('${task.id}')\" style=\"margin-bottom:6px;padding:3px 10px;border-radius:4px;border:1px solid #3498db;background:#3498db;color:white;cursor:pointer;font-size:0.95em;position:relative;\">${isCollapsed ? 'View Comments' : 'Hide Comments'}`
-                        + (showRedDot ? '<span style=\"position:absolute;top:4px;right:4px;width:10px;height:10px;background:#e74c3c;border-radius:50%;display:inline-block;\"></span>' : '')
-                        + `</button>`
-                        + `<div id=\"comments-${task.id}\" style=\"display:${isCollapsed ? 'none' : 'block'};margin-top:4px;\"></div>`
-                        + `<form id=\"comment-form-${task.id}\" onsubmit=\"return submitComment(event, '${task.id}')\" style=\"display:${isCollapsed ? 'none' : 'flex'};gap:8px;align-items:center;margin-top:4px;\">`
-                        + `<input type=\"text\" id=\"comment-input-${task.id}\" placeholder=\"Add a comment...\" style=\"width:70%\" required />`
-                        + `<button type=\"submit\">Add</button>`
-                        + `</form>`
-                        + `</td>`;
-                }
-                html += `<tr>
-                    <td style="font-weight: 500;">${task.title}</td>
-                    ${commentsCellHtml}
-                    <td class="description-cell">
-                        <span class="description-content${needsExpansion ? (isExpanded ? ' expanded' : ' collapsed') : ''}">
-                            ${needsExpansion ? `<span class="description-preview">${description.substring(0, 100)}...</span><span class="description-full">${description}</span>` : description}
-                        </span>
-                        ${needsExpansion ? `<span class="show-more" onclick="toggleDescription(this, '${task.id}')">${isExpanded ? 'Show less' : 'Show more'}</span>` : ''}
-                    </td>
-                    <td class="status-cell" style="width: 200px;">
-                        ${columnId === '22'
-                            ? '<span style="color:#e74c3c;font-weight:bold;">Collected</span>'
-                            : (() => {
-                                const currentStep = steps.find(step => step.id === columnId) || { label: columnId, img: '' };
-                                return `${currentStep.img ? `<img src=\"${currentStep.img}\" class=\"status-icon\" alt=\"${currentStep.label}\">` : ''}<span class=\"status-label\">${currentStep.label}</span>${generateProgressBar(columnId)}`;
-                            })()
-                        }
-                    </td>
-                </tr>`;
-            });
-            html += "</table>";
+
+            function renderRows(list) {
+                let rows = '';
+                list.forEach(task => {
+                    const description = task.description || "";
+                    const needsExpansion = description.length > 100;
+                    const columnId = (task.column_id + '');
+                    const previewUrl = extractImageUrl(description);
+                    let commentsCellHtml = '';
+                    if (typeof window._collapsedComments[task.id] === 'undefined') {
+                        window._collapsedComments[task.id] = true;
+                    }
+                    let lastViewedTime = 0;
+                    try {
+                        const lastViewed = JSON.parse(localStorage.getItem('lastViewedComments') || '{}');
+                        lastViewedTime = lastViewed[task.id] || 0;
+                    } catch (e) {}
+                    let latestCommentTime = window._latestCommentTimestamps && window._latestCommentTimestamps[task.id] ? window._latestCommentTimestamps[task.id] : 0;
+                    const isCollapsed = window._collapsedComments && window._collapsedComments[task.id];
+                    let showRedDot = latestCommentTime > lastViewedTime;
+                    let expandedDescriptions = {};
+                    try {
+                        expandedDescriptions = JSON.parse(localStorage.getItem('expandedDescriptions') || '{}');
+                    } catch (e) {}
+                    const isExpanded = !!expandedDescriptions[task.id];
+                    if (focusedTaskId == (task.id + '')) {
+                        commentsCellHtml = document.querySelector(`[data-taskid='${task.id}']`)?.outerHTML || `<td class=\"comments-cell\" data-taskid=\"${task.id}\"></td>`;
+                    } else {
+                        commentsCellHtml = `<td class=\"comments-cell\" data-taskid=\"${task.id}\">`
+                            + `<button onclick=\"toggleComments('${task.id}')\" style=\"margin-bottom:6px;padding:3px 10px;border-radius:4px;border:1px solid #3498db;background:#3498db;color:white;cursor:pointer;font-size:0.95em;position:relative;\">${isCollapsed ? 'View Comments' : 'Hide Comments'}`
+                            + (showRedDot ? '<span style=\"position:absolute;top:4px;right:4px;width:10px;height:10px;background:#e74c3c;border-radius:50%;display:inline-block;\"></span>' : '')
+                            + `</button>`
+                            + `<div id=\"comments-${task.id}\" style=\"display:${isCollapsed ? 'none' : 'block'};margin-top:6px;\"></div>`
+                            + `<form id=\"comment-form-${task.id}\" onsubmit=\"return submitComment(event, '${task.id}')\" style=\"display:${isCollapsed ? 'none' : 'flex'};gap:10px;align-items:flex-start;margin-top:6px;\">`
+                            + `<textarea id=\"comment-input-${task.id}\" placeholder=\"Add a comment...\" rows=\"4\" style=\"width:100%;min-height:120px;resize:vertical;\" required></textarea>`
+                            + `<button type=\"submit\">Add</button>`
+                            + `</form>`
+                            + `</td>`;
+                    }
+                    rows += `<tr>
+                        <td style=\"font-weight: 500;\">${task.title}</td>
+                        ${commentsCellHtml}
+                        <td class=\"description-cell\">
+                            <span class=\"description-content${needsExpansion ? (isExpanded ? ' expanded' : ' collapsed') : ''}\">`
+                                + (needsExpansion ? `<span class=\"description-preview\">${description.substring(0, 100)}...</span><span class=\"description-full\">${description}</span>` : description)
+                            + `</span>
+                            ${needsExpansion ? `<span class=\"show-more\" onclick=\"toggleDescription(this, '${task.id}')\">${isExpanded ? 'Show less' : 'Show more'}</span>` : ''}
+                        </td>
+                        <td class=\"started-cell\" data-taskid=\"${task.id}\" style=\"white-space:normal;color:#555;\">—</td>
+                        <td class=\"status-cell\" style=\"width: 200px;\">`
+                            + (identifyCollected(task)
+                                ? '<span style=\"color:#e74c3c;font-weight:bold;\">Collected</span>'
+                                : (() => { const currentStep = steps.find(step => step.id === columnId) || { label: columnId, img: '' }; const iconSrc = currentStep.img ? encodeURI(currentStep.img) : ''; return `${iconSrc ? `<img src="${iconSrc}" class="status-icon" alt="${currentStep.label}">` : ''}<span class="status-label">${currentStep.label}</span>${generateProgressBar(columnId)}`; })()
+                              )
+                        + `</td>
+                    </tr>`;
+                });
+                return rows;
+            }
+
+            let html = '<div class="lists-grid">';
+            // Active block
+            html += `<section class="list-block active">`;
+            const activeFiltered = activeTasks.filter(t => !identifyCollected(t));
+            html += `<h2>Active Orders <span class="count">${activeFiltered.length}</span></h2>`;
+            if (activeFiltered.length > 0) {
+                html += `<table><tr><th>Title</th><th>Comments</th><th>Description</th><th>Started</th><th>Status</th></tr>${renderRows(activeFiltered)}</table>`;
+            } else {
+                html += `<div style="color:#6b7280;padding:12px;">No active orders</div>`;
+            }
+            html += `</section>`;
+
+            // Collected block
+            html += `<section class="list-block collected">`;
+            html += `<h2>Collected Orders <span class="count">${collectedTasks.length}</span></h2>`;
+            if (collectedTasks.length > 0) {
+                html += `<table><tr><th>Title</th><th>Comments</th><th>Description</th><th>Started</th><th>Status</th></tr>${renderRows(collectedTasks)}</table>`;
+            } else {
+                html += `<div style="color:#6b7280;padding:12px;">No collected orders</div>`;
+            }
+            html += `</section>`;
+            html += `</div>`;
+
             document.getElementById("result").innerHTML = html;
 
-            // After the table is rendered, loop through all tasks and render comments only once (on initial load)
+            // After rendering, attach comments for displayed tasks
             if (!window._commentsRendered) {
                 window._commentsRendered = {};
             }
-            tasks.forEach(task => {
+            [...activeTasks, ...collectedTasks].forEach(task => {
                 renderCommentsUI(task.id);
             });
+
+            // Populate Started dates for visible tasks
+            try {
+                const visibleTasks = [...activeTasks, ...collectedTasks];
+                // If any task already includes date_started from search, pre-fill cells and cache
+                visibleTasks.forEach(t => {
+                    if (t && (t.date_started !== undefined && t.date_started !== null)) {
+                        const cell = document.querySelector(`td.started-cell[data-taskid="${t.id}"]`);
+                        if (cell) cell.textContent = formatStarted(t.date_started);
+                        try { cacheSet(String(t.id), t); } catch (_) {}
+                    }
+                });
+                populateStartedDates(visibleTasks.map(t => String(t.id)));
+            } catch (_) {}
+        }
+
+        // Cache for getTask results to avoid spamming server on auto-refresh
+        const startedCache = {
+            map: new Map(), // id -> { value, ts }
+            ttlMs: 60_000
+        };
+
+        function cacheGet(id) {
+            const e = startedCache.map.get(String(id));
+            if (!e) return undefined;
+            if (Date.now() - e.ts > startedCache.ttlMs) {
+                startedCache.map.delete(String(id));
+                return undefined;
+            }
+            return e.value;
+        }
+
+        function cacheSet(id, value) {
+            startedCache.map.set(String(id), { value, ts: Date.now() });
+        }
+
+    function formatStarted(val) {
+            // Kanboard may return: null, '0', epoch seconds string, or 'YYYY-MM-DD HH:MM'
+            if (val === null || val === undefined) return '—';
+            const s = String(val).trim();
+            if (s === '' || s === '0') return '—';
+            // numeric epoch seconds
+            if (/^\d{9,}$/.test(s)) {
+                const ms = Number(s) * 1000;
+                const d = new Date(ms);
+                return isNaN(d.getTime()) ? '—' : formatCompact(d);
+            }
+            // Fallback: try Date parse
+            const d = new Date(s.replace(' ', 'T'));
+            return isNaN(d.getTime()) ? s : formatCompact(d);
+        }
+
+        function pad2(n){ return String(n).padStart(2,'0'); }
+        function formatCompact(d){
+            const y = d.getFullYear();
+            const m = pad2(d.getMonth()+1);
+            const da = pad2(d.getDate());
+            const h = pad2(d.getHours());
+            const mi = pad2(d.getMinutes());
+            return `${y}-${m}-${da} ${h}:${mi}`;
+        }
+
+        async function getTaskById(taskId) {
+            // Check cache first
+            const cached = cacheGet(taskId);
+            if (cached) return cached;
+
+            // Ensure auth + CSRF like performSearch
+            await checkLogin();
+            await getCsrfToken();
+
+            const payload = {
+                jsonrpc: '2.0',
+                method: 'getTask',
+                id: Date.now(),
+                params: { task_id: Number(taskId) },
+                csrf_token: window.csrfToken || ''
+            };
+
+            const resp = await fetch('https://maphefosigns.co.za/users/kanboard_proxy.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': window.csrfToken || ''
+                },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            const result = data && data.result ? data.result : null;
+            cacheSet(taskId, result);
+            return result;
+        }
+
+        async function populateStartedDates(taskIds) {
+            if (!Array.isArray(taskIds) || taskIds.length === 0) return;
+            // Limit concurrency to avoid flooding
+            const limit = 4;
+            let idx = 0;
+            async function worker() {
+                while (idx < taskIds.length) {
+                    const i = idx++;
+                    const id = taskIds[i];
+                    try {
+                        const rowCell = document.querySelector(`td.started-cell[data-taskid="${id}"]`);
+                        if (!rowCell) continue;
+                        // If cached, update immediately
+                        const cached = cacheGet(id);
+                        if (cached !== undefined) {
+                            rowCell.textContent = formatStarted(cached && cached.date_started);
+                            continue;
+                        }
+                        // Otherwise fetch, then update
+                        const task = await getTaskById(id);
+                        rowCell.textContent = formatStarted(task && task.date_started);
+                    } catch (e) {
+                        // Non-fatal; leave as em dash
+                    }
+                }
+            }
+            const workers = Array.from({ length: Math.min(limit, taskIds.length) }, () => worker());
+            await Promise.all(workers);
         }
 
         // Add modal for comments at the end of body
@@ -604,8 +927,8 @@
             if (!modal || !body) return;
             modal.style.display = 'block';
             body.innerHTML = `<div id='comments-${taskId}'></div>
-                <form id='comment-form-${taskId}' onsubmit="return submitComment(event, '${taskId}')">
-                    <input type="text" id="comment-input-${taskId}" placeholder="Add a comment..." style="width:70%" required />
+                <form id='comment-form-${taskId}' onsubmit="return submitComment(event, '${taskId}')" style="display:flex;gap:10px;align-items:flex-start;">
+                    <textarea id="comment-input-${taskId}" placeholder="Add a comment..." rows="5" style="width:100%;min-height:140px;resize:vertical;" required></textarea>
                     <button type="submit">Add</button>
                 </form>`;
             renderCommentsUI(taskId);
@@ -647,8 +970,31 @@
 
         // Add spinner animation
         const style = document.createElement('style');
-        style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }`;
+        style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+        textarea[id^="comment-input-"] { overflow:hidden; }
+        `;
         document.head.appendChild(style);
+
+        // Auto-size textareas for comment inputs
+        function autoSizeTextarea(el) {
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = Math.min(Math.max(el.scrollHeight, 120), 400) + 'px';
+        }
+        // Delegate autosize for dynamically added textareas
+        document.addEventListener('input', function(e) {
+            const t = e.target;
+            if (t && t.tagName === 'TEXTAREA' && t.id && (t.id.startsWith('comment-input-') || t.id.startsWith('edit-input-'))) {
+                autoSizeTextarea(t);
+            }
+        }, true);
+        // Also size on focus
+        document.addEventListener('focusin', function(e) {
+            const t = e.target;
+            if (t && t.tagName === 'TEXTAREA' && t.id && (t.id.startsWith('comment-input-') || t.id.startsWith('edit-input-'))) {
+                autoSizeTextarea(t);
+            }
+        });
 
         window.deleteComment = function(taskId, commentId) {
             if (!window.confirm('Delete this comment?')) return;
@@ -667,7 +1013,7 @@
             if (!formDiv) return;
             if (formDiv.querySelector('form')) return; // Already rendered, don't replace
             formDiv.innerHTML = `<form onsubmit=\"return submitComment(event, '${taskId}')">
-        <input type=\"text\" id=\"comment-input-${taskId}\" placeholder=\"Add a comment...\" style=\"width:70%\" required />
+    <textarea id=\"comment-input-${taskId}\" placeholder=\"Add a comment...\" rows=\"2\" style=\"width:100%;min-height:60px;resize:vertical;\" required></textarea>
         <button type=\"submit\">Add</button>
     </form>`;
         }
@@ -699,7 +1045,7 @@
             if (!commentDiv) return;
             const text = decodeURIComponent(encodedText);
             commentDiv.innerHTML = `
-                <input type="text" id="edit-input-${taskId}-${commentId}" value="${text}" style="width:60%" />
+                <textarea id="edit-input-${taskId}-${commentId}" style="width:100%;min-height:120px;resize:vertical;padding:8px 12px;">${text}</textarea>
                 <button onclick="saveEditComment('${taskId}','${commentId}')">Save</button>
                 <button onclick="cancelEditComment('${taskId}')">Cancel</button>
             `;
