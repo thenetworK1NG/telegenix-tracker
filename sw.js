@@ -39,6 +39,16 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event
 self.addEventListener('fetch', (event) => {
+  // Skip caching for chrome-extension:// requests and non-GET requests
+  if (
+    event.request.url.startsWith('chrome-extension://') ||
+    event.request.method !== 'GET'
+  ) {
+    // Just fetch, don't try to cache
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   // For API calls
   if (event.request.url.includes('jsonrpc.php')) {
     event.respondWith(
