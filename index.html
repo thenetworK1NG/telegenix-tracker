@@ -14,6 +14,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="theme-color" content="#dc2626">
     <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Progress App">
@@ -300,12 +301,12 @@
         .progress-container {
             display: flex;
             align-items: center;
-            gap: 2px;
-            margin-top: 4px;
+            gap: 0px;
+            margin-top: 1px;
         }
         .progress-step {
             flex: 1;
-            height: 4px;
+            height: 1px;
             background: #e0e0e0;
             position: relative;
         }
@@ -314,6 +315,37 @@
         }
         .progress-step.completed {
             background: #2ecc71;
+        }
+
+        /* Mobile progress bar - full width */
+        @media screen and (max-width: 768px) {
+            .progress-container {
+                width: calc(100vw - 140px);
+                position: relative;
+                left: 0;
+                right: auto;
+                margin-left: 0;
+                margin-right: 0;
+                margin-top: 1px;
+                margin-bottom: 1px;
+            }
+            
+            /* Status cell layout - stack icon and progress bar vertically */
+            .status-cell {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                padding: 12px 8px 12px 120px !important;
+                position: relative !important;
+            }
+            
+            .status-cell .status-icon {
+                margin-bottom: 8px;
+            }
+            
+            .status-cell .status-label {
+                margin-bottom: 8px;
+            }
         }
         .status-icon {
             width: 24px;
@@ -638,6 +670,17 @@
         <div style="text-align: center; margin-bottom: 30px;">
             <img src="telegenix.png" alt="Telegenix" style="max-width: 250px; width: 100%; height: auto;">
         </div>
+        
+        <!-- Order Search Bar -->
+        <div style="margin-bottom: 20px; text-align: center;">
+            <input type="text" id="orderSearch" placeholder="Search for order number..." 
+                   style="max-width: 300px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
+                   onkeyup="searchOrders(this.value)">
+            <button onclick="forceRefresh()" style="margin-left: 10px; padding: 8px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                🔄 Refresh
+            </button>
+        </div>
+        
         <div class="search-form" id="searchOptions" style="display:none"><div class="form-group">
                 <label>Project</label>
                 <select id="projectId" class="form-control">
@@ -663,31 +706,25 @@
             if (opts) opts.style.display = opts.style.display === 'none' ? '' : 'none';
         }
     });
-    // Set default search query to 'tel' and trigger search on load, then auto-refresh every 3 seconds
+    // Set default search query to 'tel' and trigger search on load, then auto-refresh every 10 seconds
     document.addEventListener('DOMContentLoaded', function() {
         const queryInput = document.getElementById('query');
         if (queryInput) {
             queryInput.value = 'tel';
         }
-        // Wait a moment for auto-login, then search and start interval
-        setTimeout(() => {
-            if (typeof performSearch === 'function') {
-                performSearch();
-                // Store interval id globally so we can pause/resume
-                window._autoRefreshInterval = setInterval(() => {
-                    performSearch();
-                }, 3000);
-            }
-        }, 600);
+        
+        // Let auth.js handle initialization - don't duplicate it here
+        // The auth.js will call initializeApp() which should trigger the search
+    });
 
         // Track if editing a comment
         window._isEditingComment = false;
-        // Pause auto-refresh when any comment input or edit input is focused, resume when blurred
+        // Pause auto-refresh when any comment input, edit input, or search bar is focused, resume when blurred
         document.addEventListener('focusin', function(e) {
             if (e.target && e.target.id && e.target.id.startsWith('edit-input-')) {
                 window._isEditingComment = true;
             }
-            if (e.target && e.target.id && (e.target.id.startsWith('comment-input-') || e.target.id.startsWith('edit-input-'))) {
+            if (e.target && e.target.id && (e.target.id.startsWith('comment-input-') || e.target.id.startsWith('edit-input-') || e.target.id === 'orderSearch')) {
                 if (window._autoRefreshInterval) {
                     clearInterval(window._autoRefreshInterval);
                     window._autoRefreshInterval = null;
@@ -698,15 +735,15 @@
             if (e.target && e.target.id && e.target.id.startsWith('edit-input-')) {
                 window._isEditingComment = false;
             }
-            if (e.target && e.target.id && (e.target.id.startsWith('comment-input-') || e.target.id.startsWith('edit-input-'))) {
+            if (e.target && e.target.id && (e.target.id.startsWith('comment-input-') || e.target.id.startsWith('edit-input-') || e.target.id === 'orderSearch')) {
                 if (!window._autoRefreshInterval && typeof performSearch === 'function') {
                     window._autoRefreshInterval = setInterval(() => {
                         performSearch();
-                    }, 3000);
+                    }, 10000); // Increased from 3000ms to 10000ms (10 seconds)
                 }
             }
         });
-    });
+        
         // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -812,11 +849,72 @@
             localStorage.setItem('expandedDescriptions', JSON.stringify(expandedDescriptions));
         }
 
+        // Force refresh function to get latest data - make it global
+        window.forceRefresh = function() {
+            // Clear cached data to force fresh fetch
+            localStorage.removeItem('cachedTasks');
+            window._initialFetchRetried = false;
+            window._authRetryCount = 0;
+            // Clear search bar
+            document.getElementById('orderSearch').value = '';
+            // Show loading indicator
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '🔄 Loading...';
+            button.disabled = true;
+            // Trigger fresh search
+            if (typeof performSearch === 'function') {
+                performSearch().finally(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                });
+            }
+        }
+
+        // Function to search orders by order number - make it global
+        window.searchOrders = function(searchTerm) {
+            const rows = document.querySelectorAll('table tr');
+            searchTerm = searchTerm.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                // Show all rows if search is empty
+                rows.forEach(row => {
+                    row.style.display = '';
+                });
+                return;
+            }
+            
+            rows.forEach(row => {
+                // Check if this is a data row (not header)
+                const titleCell = row.querySelector('td[data-label="Title"]');
+                if (titleCell) {
+                    // Get the title text content
+                    const titleText = titleCell.textContent || titleCell.innerText || '';
+                    const cleanTitle = titleText.toLowerCase().trim();
+                    
+                    if (cleanTitle.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                } else {
+                    // If no title cell found, check if it's a header or empty row
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length === 0) {
+                        // This is likely a header row, keep it visible
+                        row.style.display = '';
+                    }
+                }
+            });
+        }
+
         // Function to perform the search
         async function performSearch() {
-            // Require login before searching
-            await checkLogin();
-            await getCsrfToken();
+            // Check if we're authenticated, if not, don't make the request
+            if (!authState.username || !window.csrfToken) {
+                console.log('Not authenticated, skipping search');
+                return;
+            }
 
             const projectId = parseInt(document.getElementById("projectId").value, 10);
             const userQuery = document.getElementById("query").value;
@@ -845,7 +943,25 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error("HTTP error " + response.status);
+                // Handle authentication errors like the demo system
+                if (response.status === 401 || response.status === 403) {
+                    console.log('Authentication failed, clearing session and stopping auto-refresh');
+                    // Clear auth state
+                    authState.username = null;
+                    sessionStorage.removeItem("username");
+                    localStorage.removeItem("username");
+                    window.csrfToken = '';
+                    // Stop auto-refresh to prevent spam
+                    if (window._autoRefreshInterval) {
+                        clearInterval(window._autoRefreshInterval);
+                        window._autoRefreshInterval = null;
+                    }
+                    throw new Error("Authentication failed - please refresh page");
+                }
+
+                if (!response.ok) {
+                    throw new Error("HTTP error " + response.status);
+                }
                 
                 const data = await response.json();
                 cachedTasks = data.result; // Cache the results
@@ -860,7 +976,14 @@
                 }));
 
             } catch (err) {
-                console.log('Error fetching data:', err);
+                // Completely suppress authentication error logging
+                if (err.message.includes('403') || err.message.includes('Authentication failed')) {
+                    // Silently handle authentication errors - don't log anything
+                } else {
+                    // Only log non-authentication errors
+                    console.log('Error fetching data:', err);
+                }
+                
                 // One-time fast retry on initial failure to avoid false offline popup during startup
                 if (!window._initialFetchRetried) {
                     window._initialFetchRetried = true;
@@ -1077,7 +1200,7 @@
             const activeFiltered = activeTasks.filter(t => !identifyCollected(t));
             html += `<h2>Active Orders <span class="count">${activeFiltered.length}</span></h2>`;
             if (activeFiltered.length > 0) {
-                html += `<table><tr><th>Title</th><th>Comments</th><th>Description</th><th>Started</th><th>Status</th></tr>${renderRows(activeFiltered)}</table>`;
+                html += `<table>${renderRows(activeFiltered)}</table>`;
             } else {
                 html += `<div style="color:#6b7280;padding:12px;">No active orders</div>`;
             }
@@ -1087,7 +1210,7 @@
             html += `<section class="list-block collected">`;
             html += `<h2>Collected Orders <span class="count">${collectedTasks.length}</span></h2>`;
             if (collectedTasks.length > 0) {
-                html += `<table><tr><th>Title</th><th>Comments</th><th>Description</th><th>Started</th><th>Status</th></tr>${renderRows(collectedTasks)}</table>`;
+                html += `<table>${renderRows(collectedTasks)}</table>`;
             } else {
                 html += `<div style="color:#6b7280;padding:12px;">No collected orders</div>`;
             }

@@ -54,30 +54,48 @@ async function initializeApp() {
     authState.username = null;
     sessionStorage.removeItem("username");
     localStorage.removeItem("username");
-    fetch(API_BASE + "login_api.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: 'Andre' }),
-        credentials: 'include'
-    })
-    .then(res => res.json())
-    .then(data => {
+    
+    try {
+        const response = await fetch(API_BASE + "login_api.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: 'Andre' }),
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
         if (data.success) {
             authState.username = 'Andre';
             sessionStorage.setItem("username", 'Andre');
             localStorage.setItem("username", 'Andre');
-            csrfToken = data.csrf_token || csrfToken;
+            csrfToken = data.csrf_token || '';
             window.csrfToken = csrfToken;
             if (authElements.logoutBtn) authElements.logoutBtn.style.display = '';
             if (window.setFormInteractivity) setFormInteractivity(true);
             console.log("Auto-login as Andre successful");
+            
+            // Get CSRF token before starting search
+            try {
+                await getCsrfToken();
+                console.log("CSRF token retrieved, starting search...");
+                
+                // Start the task search after successful authentication and CSRF token
+                if (typeof performSearch === 'function') {
+                    performSearch();
+                    // Store interval id globally so we can pause/resume
+                    window._autoRefreshInterval = setInterval(() => {
+                        performSearch();
+                    }, 10000); // 10 seconds
+                }
+            } catch (csrfErr) {
+                console.log("Failed to get CSRF token:", csrfErr);
+            }
         } else {
             console.log("Auto-login as Andre failed: " + (data.error || "Login failed"));
         }
-    })
-    .catch(err => {
+    } catch (err) {
         console.log("Auto-login as Andre error:", err);
-    });
+    }
 }
 
 async function getCsrfToken() {
@@ -91,20 +109,63 @@ async function getCsrfToken() {
 }
 
 async function checkLogin() {
-    if (!authState.username) {
-        await showLoginModal();
-        return true;
+    // Check if user is already authenticated
+    if (authState.username) {
+        try {
+            // Verify session is still valid
+            await getCsrfToken();
+            console.log('User already authenticated:', authState.username);
+            return true;
+        } catch (err) {
+            console.log('Session expired, clearing state');
+            authState.username = null;
+            sessionStorage.removeItem("username");
+            localStorage.removeItem("username");
+            csrfToken = '';
+            window.csrfToken = '';
+        }
     }
+    
+    // Try to restore from session storage
+    const savedUsername = sessionStorage.getItem("username") || localStorage.getItem("username");
+    if (savedUsername) {
+        authState.username = savedUsername;
+        try {
+            await getCsrfToken();
+            console.log('Session restored for:', savedUsername);
+            return true;
+        } catch (err) {
+            console.log('Saved session invalid, clearing');
+            authState.username = null;
+            sessionStorage.removeItem("username");
+            localStorage.removeItem("username");
+        }
+    }
+    
+    // Auto-login as Andre like the original system
     try {
-        await getCsrfToken();
-        if (typeof clearError === 'function') clearError();
-        return true;
+        const response = await fetch(API_BASE + "login_api.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: 'Andre' }),
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            authState.username = 'Andre';
+            sessionStorage.setItem("username", 'Andre');
+            localStorage.setItem("username", 'Andre');
+            csrfToken = data.csrf_token || '';
+            window.csrfToken = csrfToken;
+            console.log("Auto-login as Andre successful");
+            return true;
+        } else {
+            throw new Error(data.error || "Login failed");
+        }
     } catch (err) {
-        authState.username = null;
-        sessionStorage.removeItem("username");
-        await showLoginModal();
-        if (typeof clearError === 'function') clearError();
-        return true;
+        console.log("Auto-login failed:", err);
+        throw err;
     }
 }
 
