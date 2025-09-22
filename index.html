@@ -11,8 +11,8 @@
             window.listenForComments = listenForComments;
             window.deleteCommentBackend = deleteComment;
         </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#3498db">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#dc2626">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -22,28 +22,29 @@
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
             margin: 0;
-            padding: 20px;
-            background: #f5f5f5;
+            padding: 10px;
+            background: #fdf2f2;
             color: #333;
         }
         .container {
             max-width: 100%;
             margin: 0 auto;
             background: white;
-            padding: 30px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         h1 {
-            color: #2c3e50;
+            color: #dc2626;
             margin-bottom: 30px;
             font-weight: 500;
         }
         .search-form {
             display: flex;
+            flex-direction: column;
             gap: 15px;
-            margin-bottom: 30px;
-            align-items: flex-end;
+            margin-bottom: 20px;
+            align-items: stretch;
         }
         .form-group {
             flex: 1;
@@ -56,29 +57,32 @@
         }
         input, select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 16px;
             transition: border-color 0.3s;
             background-color: white;
+            box-sizing: border-box;
         }
         input:focus, select:focus {
             outline: none;
-            border-color: #3498db;
+            border-color: #dc2626;
         }
         button {
-            background: #3498db;
+            background: #dc2626;
             color: white;
             border: none;
-            padding: 11px 25px;
+            padding: 12px 25px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             transition: background 0.3s;
+            min-height: 44px;
+            touch-action: manipulation;
         }
         button:hover {
-            background: #2980b9;
+            background: #b91c1c;
         }
         pre { 
             background: #f8f9fa; 
@@ -94,13 +98,110 @@
             table-layout: fixed;
             overflow: hidden;
         }
+        
+        /* Mobile-first table design */
+        @media (max-width: 768px) {
+            /* Hide table headers on mobile */
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            
+            tr {
+                border: 1px solid #ccc;
+                margin-bottom: 15px;
+                padding: 15px;
+                border-radius: 8px;
+                background: white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                width: auto;
+                overflow: visible;
+            }
+            
+            td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding: 12px 8px 12px 120px;
+                text-align: left;
+                white-space: nowrap;
+                font-size: 14px;
+                word-wrap: normal;
+                overflow: visible;
+                text-overflow: clip;
+                width: auto;
+                max-width: none;
+                line-height: 1.3;
+                min-height: 20px;
+            }
+            
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 8px;
+                width: 110px;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: bold;
+                color: #666;
+                font-size: 12px;
+                top: 12px;
+                line-height: 1.2;
+            }
+            
+            td:last-child {
+                border-bottom: 0;
+            }
+            
+            .comments-cell {
+                min-width: auto;
+                max-width: none;
+                overflow: visible;
+                white-space: nowrap;
+                width: auto;
+            }
+            
+            .comments-cell textarea {
+                width: calc(100% - 16px);
+                min-height: 80px;
+            }
+            
+            /* Ensure comment toggle buttons are visible and functional on mobile */
+            .comments-cell button[onclick*="toggleComments"] {
+                padding: 8px 15px !important;
+                font-size: 14px !important;
+                min-height: 40px !important;
+                white-space: nowrap !important;
+                overflow: visible !important;
+                width: auto !important;
+                display: inline-block !important;
+                line-height: 1.2 !important;
+            }
+            
+            /* Override desktop text truncation for mobile cards */
+            td {
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: nowrap !important;
+                word-wrap: normal !important;
+                overflow-wrap: normal !important;
+                hyphens: none !important;
+                max-width: none !important;
+                width: auto !important;
+            }
+        }
         th { 
-            background: #f8f9fa;
+            background: #fee2e2;
             padding: 12px;
             text-align: left;
             font-weight: 500;
-            color: #2c3e50;
-            border-bottom: 2px solid #ddd;
+            color: #991b1b;
+            border-bottom: 2px solid #fca5a5;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -113,7 +214,7 @@
             vertical-align: top;
         }
         tr:hover {
-            background: #f8f9fa;
+            background: #fee2e2;
         }
         /* Two blocks layout */
         .lists-grid {
@@ -146,8 +247,8 @@
             padding: 2px 8px;
             border-radius: 999px;
         }
-        .list-block.collected h2 { color: #8e44ad; }
-        .list-block.active h2 { color: #2c3e50; }
+        .list-block.collected h2 { color: #dc2626; }
+        .list-block.active h2 { color: #991b1b; }
         .description-cell {
             position: relative;
             max-width: 100%;
@@ -174,7 +275,7 @@
             display: inline;
         }
         .show-more {
-            color: #3498db;
+            color: #dc2626;
             cursor: pointer;
             font-size: 0.9em;
             margin-left: 5px;
@@ -209,7 +310,7 @@
             position: relative;
         }
         .progress-step.active {
-            background: #3498db;
+            background: #dc2626;
         }
         .progress-step.completed {
             background: #2ecc71;
@@ -241,41 +342,208 @@
     table tr th:nth-child(5),
     table tr td:nth-child(5) { width: 9%; }  /* Status */
         /* Ensure no horizontal scroll from long content */
-        html, body { max-width: 100%; overflow-x: hidden; }
-        .list-block { overflow: hidden; }
+        html, body { max-width: 100%; overflow-x: auto; }
+        .list-block { overflow: visible; }
         .comment-form { min-width: 0; }
         .comment-form input,
         .comment-form textarea { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
 
-        /* Mobile responsive tweaks */
-        @media (max-width: 900px) {
-            .container { padding: 16px; }
-            h1 { font-size: 20px; }
-            button { padding: 9px 16px; font-size: 13px; }
+        /* Desktop table styles */
+        @media (min-width: 769px) {
+            .search-form {
+                flex-direction: row;
+                align-items: flex-end;
+            }
+            
+            .container {
+                padding: 30px;
+            }
+            
+            body {
+                padding: 20px;
+            }
+        }
+        
+        /* Tablet responsive tweaks */
+        @media (max-width: 900px) and (min-width: 769px) {
+            .container { padding: 20px; }
+            h1 { font-size: 24px; }
             th, td { padding: 10px; }
-            /* Rebalance widths for 5 columns on small screens */
+            /* Rebalance widths for 5 columns on tablet screens */
             table tr th:nth-child(1),
-            table tr td:nth-child(1) { width: 22%; } /* Title */
+            table tr td:nth-child(1) { width: 20%; } /* Title */
             table tr th:nth-child(2),
-            table tr td:nth-child(2) { width: 42%; } /* Comments */
+            table tr td:nth-child(2) { width: 40%; } /* Comments */
             table tr th:nth-child(3),
-            table tr td:nth-child(3) { width: 24%; } /* Description */
+            table tr td:nth-child(3) { width: 25%; } /* Description */
             table tr th:nth-child(4),
-            table tr td:nth-child(4) { width: 6%; }  /* Started */
+            table tr td:nth-child(4) { width: 8%; }  /* Started */
             table tr th:nth-child(5),
-            table tr td:nth-child(5) { width: 6%; }  /* Status */
+            table tr td:nth-child(5) { width: 7%; }  /* Status */
         }
         /* Let status content show fully */
         .status-cell { overflow: visible; }
-    .status-cell .status-label { white-space: nowrap; }
-        @media (max-width: 640px) {
-            .search-form { gap: 8px; }
-            .search-form .form-group label { font-size: 12px; }
-            input, select { padding: 8px; font-size: 13px; }
-            th, td { padding: 8px; font-size: 13px; }
-            .comments-cell { min-width: 220px; }
-            .status-label { font-size: 0.85em; }
-            .status-cell { width: auto !important; }
+        .status-cell .status-label { white-space: nowrap; }
+        
+        /* Mobile phone specific adjustments */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                padding: 10px;
+                border-radius: 0;
+            }
+            
+            h1 { 
+                font-size: 18px; 
+                margin-bottom: 15px;
+                text-align: center;
+            }
+            
+            .search-form { 
+                gap: 10px; 
+                margin-bottom: 15px;
+            }
+            
+            .search-form .form-group label { 
+                font-size: 14px; 
+                margin-bottom: 5px;
+            }
+            
+            input, select { 
+                padding: 10px; 
+                font-size: 16px; 
+            }
+            
+            button {
+                padding: 12px;
+                font-size: 16px;
+                width: 100%;
+            }
+            
+            tr {
+                margin-bottom: 15px;
+                padding: 15px;
+            }
+            
+            td {
+                padding: 12px 10px 12px 130px;
+                font-size: 15px;
+                line-height: 1.4;
+                white-space: nowrap;
+                word-wrap: normal;
+                overflow: visible;
+                text-overflow: clip;
+                width: auto;
+                max-width: none;
+                min-height: 24px;
+            }
+            
+            td:before {
+                width: 120px;
+                font-size: 13px;
+                top: 12px;
+                line-height: 1.2;
+            }
+            
+            .comments-cell textarea {
+                min-height: 100px;
+                font-size: 16px;
+            }
+            
+            .comment-form button {
+                padding: 12px 15px;
+                font-size: 16px;
+                width: auto;
+                min-width: 70px;
+                margin-left: 5px;
+            }
+            
+            .comment-btn {
+                min-height: 36px;
+                padding: 6px 12px !important;
+                font-size: 14px !important;
+                margin: 2px !important;
+                touch-action: manipulation;
+            }
+            
+            /* Make comment buttons stack vertically on very small screens */
+            .comment-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .comment-item .comment-text {
+                order: 1;
+            }
+            
+            .comment-item .comment-time {
+                order: 2;
+                text-align: left;
+                min-width: auto;
+                font-size: 12px;
+            }
+            
+            .comment-item .comment-btn {
+                order: 3;
+                align-self: flex-start;
+                margin: 0 5px 0 0 !important;
+                display: inline-block;
+            }
+            
+            /* Stack edit and delete buttons horizontally */
+            .comment-item .comment-edit,
+            .comment-item .comment-delete {
+                display: inline-block;
+                margin-right: 8px !important;
+            }
+            
+            /* Fix comment toggle button for mobile - CRITICAL FIX */
+            .comments-cell button[onclick*="toggleComments"] {
+                padding: 10px 15px !important;
+                font-size: 15px !important;
+                min-height: 44px !important;
+                white-space: nowrap !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                line-height: 1.2 !important;
+                display: inline-block !important;
+                width: auto !important;
+                max-width: none !important;
+            }
+            
+            /* Override desktop text truncation for all mobile content */
+            td {
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: nowrap !important;
+                word-wrap: normal !important;
+                overflow-wrap: normal !important;
+                hyphens: none !important;
+                max-width: none !important;
+                width: auto !important;
+            }
+            
+            /* Ensure title and description fields show complete text */
+            .description-cell,
+            .description-content {
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: nowrap !important;
+                word-wrap: normal !important;
+                overflow-wrap: normal !important;
+                max-width: none !important;
+                width: auto !important;
+            }
+            
+            .status-label { 
+                font-size: 0.9em;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+            }
         }
         .comment-item {
             background: #f8f9fa;
@@ -337,13 +605,15 @@
             overflow-wrap: anywhere;
         }
         .comment-form button {
-            background: #3498db;
+            background: #dc2626;
             color: white;
-            padding: 8px 18px;
+            padding: 10px 18px;
             border: none;
             border-radius: 4px;
             font-size: 1em;
             cursor: pointer;
+            min-height: 44px;
+            touch-action: manipulation;
         }
         .comment-loading {
             padding: 12px;
@@ -354,7 +624,7 @@
             width: 20px;
             height: 20px;
             border: 3px solid #ccc;
-            border-top: 3px solid #3498db;
+            border-top: 3px solid #dc2626;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -365,6 +635,9 @@
     </style>
 </head>
 <body>    <div class="container">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <img src="telegenix.png" alt="Telegenix" style="max-width: 250px; width: 100%; height: auto;">
+        </div>
         <div class="search-form" id="searchOptions" style="display:none"><div class="form-group">
                 <label>Project</label>
                 <select id="projectId" class="form-control">
@@ -595,20 +868,31 @@
                     return;
                 }
                 
-                // Try to load cached data if offline
+                // Check if we're actually offline before showing offline message
+                const isActuallyOffline = !navigator.onLine;
+                
+                // Try to load cached data
                 const cachedData = localStorage.getItem('cachedTasks');
                 if (cachedData) {
                     const { tasks, timestamp } = JSON.parse(cachedData);
                     const cacheAge = Date.now() - timestamp;
                     
-                    // Show offline notification
-                    showOfflineNotification(cacheAge);
+                    // Only show offline notification if we're actually offline
+                    if (isActuallyOffline) {
+                        showOfflineNotification(cacheAge);
+                    } else {
+                        // If online but got an error, just log it and show cached data silently
+                        console.log('Network error while online, showing cached data silently');
+                    }
                     
                     displayResult(tasks);
                 } else {
+                    const errorMessage = isActuallyOffline 
+                        ? "You are offline and no cached data is available."
+                        : "Unable to load tasks due to a network error.";
                     document.getElementById("result").innerHTML = `
                         <div style="text-align: center; color: #666; padding: 40px;">
-                            <p>Unable to load tasks. You are offline and no cached data is available.</p>
+                            <p>${errorMessage}</p>
                         </div>`;
                 }
             }
@@ -652,6 +936,20 @@
 
         // Add event listener for the search button
         document.getElementById("searchBtn").addEventListener("click", performSearch);
+
+        // Add event listeners for online/offline detection
+        window.addEventListener('online', function() {
+            console.log('User came back online');
+            hideOfflineNotification();
+            // Refresh data when coming back online
+            if (typeof performSearch === 'function') {
+                performSearch();
+            }
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('User went offline');
+        });
 
         // Add event listener for Enter key on the query input
         document.getElementById("query").addEventListener("keypress", function(event) {
@@ -726,19 +1024,24 @@
                         lastViewedTime = lastViewed[task.id] || 0;
                     } catch (e) {}
                     let latestCommentTime = window._latestCommentTimestamps && window._latestCommentTimestamps[task.id] ? window._latestCommentTimestamps[task.id] : 0;
+                    // Count new comments for this task
+                    let newCommentCount = 0;
+                    if (window._commentCounts && window._commentCounts[task.id]) {
+                        newCommentCount = window._commentCounts[task.id];
+                    }
                     const isCollapsed = window._collapsedComments && window._collapsedComments[task.id];
-                    let showRedDot = latestCommentTime > lastViewedTime;
+                    let showNotificationBadge = newCommentCount > 0;
                     let expandedDescriptions = {};
                     try {
                         expandedDescriptions = JSON.parse(localStorage.getItem('expandedDescriptions') || '{}');
                     } catch (e) {}
                     const isExpanded = !!expandedDescriptions[task.id];
                     if (focusedTaskId == (task.id + '')) {
-                        commentsCellHtml = document.querySelector(`[data-taskid='${task.id}']`)?.outerHTML || `<td class=\"comments-cell\" data-taskid=\"${task.id}\"></td>`;
+                        commentsCellHtml = document.querySelector(`[data-taskid='${task.id}']`)?.outerHTML || `<td data-label="Comments" class=\"comments-cell\" data-taskid=\"${task.id}\"></td>`;
                     } else {
-                        commentsCellHtml = `<td class=\"comments-cell\" data-taskid=\"${task.id}\">`
-                            + `<button onclick=\"toggleComments('${task.id}')\" style=\"margin-bottom:6px;padding:3px 10px;border-radius:4px;border:1px solid #3498db;background:#3498db;color:white;cursor:pointer;font-size:0.95em;position:relative;\">${isCollapsed ? 'View Comments' : 'Hide Comments'}`
-                            + (showRedDot ? '<span style=\"position:absolute;top:4px;right:4px;width:10px;height:10px;background:#e74c3c;border-radius:50%;display:inline-block;\"></span>' : '')
+                        commentsCellHtml = `<td data-label="Comments" class=\"comments-cell\" data-taskid=\"${task.id}\">`
+                            + `<button onclick=\"toggleComments('${task.id}')\" style=\"margin-bottom:6px;padding:3px 10px;border-radius:4px;border:1px solid #dc2626;background:#dc2626;color:white;cursor:pointer;font-size:0.95em;position:relative;\">${isCollapsed ? 'View Comments' : 'Hide Comments'}`
+                            + (showNotificationBadge ? `<span style="position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;background:#22c55e;color:white;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.75em;font-weight:bold;border:2px solid white;">${newCommentCount}</span>` : '')
                             + `</button>`
                             + `<div id=\"comments-${task.id}\" style=\"display:${isCollapsed ? 'none' : 'block'};margin-top:6px;\"></div>`
                             + `<form id=\"comment-form-${task.id}\" onsubmit=\"return submitComment(event, '${task.id}')\" style=\"display:${isCollapsed ? 'none' : 'flex'};gap:10px;align-items:flex-start;margin-top:6px;\">`
@@ -748,16 +1051,16 @@
                             + `</td>`;
                     }
                     rows += `<tr>
-                        <td style=\"font-weight: 500;\">${task.title}</td>
+                        <td data-label="Title" style=\"font-weight: 500;\">${task.title}</td>
                         ${commentsCellHtml}
-                        <td class=\"description-cell\">
+                        <td data-label="Description" class=\"description-cell\">
                             <span class=\"description-content${needsExpansion ? (isExpanded ? ' expanded' : ' collapsed') : ''}\">`
                                 + (needsExpansion ? `<span class=\"description-preview\">${description.substring(0, 100)}...</span><span class=\"description-full\">${description}</span>` : description)
                             + `</span>
                             ${needsExpansion ? `<span class=\"show-more\" onclick=\"toggleDescription(this, '${task.id}')\">${isExpanded ? 'Show less' : 'Show more'}</span>` : ''}
                         </td>
-                        <td class=\"started-cell\" data-taskid=\"${task.id}\" style=\"white-space:normal;color:#555;\">—</td>
-                        <td class=\"status-cell\" style=\"width: 200px;\">`
+                        <td data-label="Started" class=\"started-cell\" data-taskid=\"${task.id}\" style=\"white-space:normal;color:#555;\">—</td>
+                        <td data-label="Status" class=\"status-cell\" style=\"width: 200px;\">`
                             + (identifyCollected(task)
                                 ? '<span style=\"color:#e74c3c;font-weight:bold;\">Collected</span>'
                                 : (() => { const currentStep = steps.find(step => step.id === columnId) || { label: columnId, img: '' }; const iconSrc = currentStep.img ? encodeURI(currentStep.img) : ''; return `${iconSrc ? `<img src="${iconSrc}" class="status-icon" alt="${currentStep.label}">` : ''}<span class="status-label">${currentStep.label}</span>${generateProgressBar(columnId)}`; })()
@@ -969,15 +1272,28 @@
             const commentsDiv = document.getElementById(`comments-${taskId}`);
             if (!commentsDiv) return;
             // Show loading spinner while loading comments
-            commentsDiv.innerHTML = '<div class="comment-loading" style="padding:12px;text-align:center;"><span class="spinner" style="display:inline-block;width:20px;height:20px;border:3px solid #ccc;border-top:3px solid #3498db;border-radius:50%;animation:spin 1s linear infinite;"></span> Loading comments...</div>';
+            commentsDiv.innerHTML = '<div class="comment-loading" style="padding:12px;text-align:center;"><span class="spinner" style="display:inline-block;width:20px;height:20px;border:3px solid #ccc;border-top:3px solid #dc2626;border-radius:50%;animation:spin 1s linear infinite;"></span> Loading comments...</div>';
             // Listen for comments
             window.listenForComments(taskId, commentsObj => {
                 let html = '';
                 // Comments list
                 html += '<div class="comments-list" style="margin-bottom:12px;">';
                 let latestTimestamp = 0;
+                let newCommentCount = 0;
+                
+                // Get last viewed time for this task
+                let lastViewedTime = 0;
+                try {
+                    const lastViewed = JSON.parse(localStorage.getItem('lastViewedComments') || '{}');
+                    lastViewedTime = lastViewed[taskId] || 0;
+                } catch (e) {}
+                
                 for (const [commentId, comment] of Object.entries(commentsObj || {})) {
                     if (comment.timestamp && comment.timestamp > latestTimestamp) latestTimestamp = comment.timestamp;
+                    // Count comments newer than last viewed time
+                    if (comment.timestamp && comment.timestamp > lastViewedTime) {
+                        newCommentCount++;
+                    }
                     html += `<div class="comment-item" id="comment-${taskId}-${commentId}" style="background:#f8f9fa;padding:10px 12px;margin-bottom:8px;border-radius:6px;display:flex;align-items:center;gap:10px;">
                         <span class="comment-text" style="flex:1;">${comment.text}</span>
                         <span class="comment-time" style="font-size:0.8em;color:#888;min-width:120px;text-align:right;">${new Date(comment.timestamp).toLocaleString()}</span>
@@ -987,9 +1303,11 @@
                 }
                 html += '</div>';
                 commentsDiv.innerHTML = html;
-                // Store latest comment timestamp for this task for red dot logic
+                // Store latest comment timestamp and new comment count for this task
                 if (!window._latestCommentTimestamps) window._latestCommentTimestamps = {};
+                if (!window._commentCounts) window._commentCounts = {};
                 window._latestCommentTimestamps[taskId] = latestTimestamp;
+                window._commentCounts[taskId] = newCommentCount;
             });
         }
 
@@ -1096,8 +1414,12 @@
         window._collapsedComments = window._collapsedComments || {};
         window.toggleComments = function(taskId) {
             window._collapsedComments[taskId] = !window._collapsedComments[taskId];
-            // If opening comments, mark as seen
+            // If opening comments, mark as seen and clear new comment count
             if (!window._collapsedComments[taskId]) {
+                    // Clear the new comment count since user is viewing them
+                    if (window._commentCounts) {
+                        window._commentCounts[taskId] = 0;
+                    }
                     try {
                         const lastViewed = JSON.parse(localStorage.getItem('lastViewedComments') || '{}');
                         // Wait a moment for comments to load, then update last viewed timestamp
